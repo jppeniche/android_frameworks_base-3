@@ -132,6 +132,11 @@ public class PhoneStatusBarPolicy {
             else if (action.equals(TtyIntent.TTY_ENABLED_CHANGE_ACTION)) {
                 updateTTY(intent);
             }
+			/*add headset icon by cofface.*/  
+            else if (action.equals(Intent.ACTION_HEADSET_PLUG)) {  
+            updateHeadsetState(intent);  
+            }  
+            //end
         }
     };
 
@@ -146,6 +151,9 @@ public class PhoneStatusBarPolicy {
         filter.addAction(AudioManager.RINGER_MODE_CHANGED_ACTION);
         filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         filter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
+		/*add headset icon by cofface.*/  
+        filter.addAction(Intent.ACTION_HEADSET_PLUG);  
+        //end  
         filter.addAction(TelephonyIntents.ACTION_SIM_STATE_CHANGED);
         filter.addAction(TtyIntent.TTY_ENABLED_CHANGE_ACTION);
         mContext.registerReceiver(mIntentReceiver, filter, null, mHandler);
@@ -174,6 +182,11 @@ public class PhoneStatusBarPolicy {
         }
         mService.setIcon("bluetooth", bluetoothIcon, 0, null);
         mService.setIconVisibility("bluetooth", mBluetoothEnabled);
+		
+		/*add headset icon by cofface.*/  
+        mService.setIcon("headset", R.drawable.stat_sys_headset, 0, null);  
+        mService.setIconVisibility("headset", false);  
+        //end 
 
         // Alarm clock
         mService.setIcon("alarm_clock", R.drawable.stat_sys_alarm, 0, null);
@@ -190,6 +203,15 @@ public class PhoneStatusBarPolicy {
         mService.setIconVisibility("volume", false);
         updateVolume();
     }
+	
+	/*add headset icon by cofface.*/  
+    private final void updateHeadsetState(Intent intent) {  
+       boolean mIsHeadsetOn = (intent.getIntExtra("state", 0) == 1);  
+       Slog.v(TAG, "updateHeadsetState: HeadsetState: " + mIsHeadsetOn);  
+  
+       mService.setIconVisibility("headset", mIsHeadsetOn);  
+    }  
+    //end 
 
     private final void updateAlarm(Intent intent) {
         boolean alarmSet = intent.getBooleanExtra("alarmSet", false);
