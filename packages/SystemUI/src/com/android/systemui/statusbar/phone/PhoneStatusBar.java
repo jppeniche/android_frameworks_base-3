@@ -2636,22 +2636,24 @@ public class PhoneStatusBar extends BaseStatusBar {
         }
     }
 
-    private void brightnessControl(MotionEvent event) {
+    private void brightnessControl(MotionEvent event)
+    {
+        if (mBrightnessControl)
+        {
             final int action = event.getAction();
-            final int x = (int) event.getRawX();
-            final int y = (int) event.getRawY();
+            final int x = (int)event.getRawX();
+            final int y = (int)event.getRawY();
             if (action == MotionEvent.ACTION_DOWN) {
                 mLinger = 0;
                 mInitialTouchX = x;
                 mInitialTouchY = y;
-                mVelocityTracker = VelocityTracker.obtain();
                 mHandler.removeCallbacks(mLongPressBrightnessChange);
-                if ((y) < mNotificationHeaderHeight) {
+                if (y < mNotificationHeaderHeight) {
                     mHandler.postDelayed(mLongPressBrightnessChange,
                             BRIGHTNESS_CONTROL_LONG_PRESS_TIMEOUT);
                 }
             } else if (action == MotionEvent.ACTION_MOVE) {
-                if ((y) < mNotificationHeaderHeight) {
+                if (y < mNotificationHeaderHeight) {
                     mVelocityTracker.computeCurrentVelocity(1000);
                     float yVel = mVelocityTracker.getYVelocity();
                     yVel = Math.abs(yVel);
@@ -2665,17 +2667,16 @@ public class PhoneStatusBar extends BaseStatusBar {
                     int touchSlop = ViewConfiguration.get(mContext).getScaledTouchSlop();
                     if (Math.abs(x - mInitialTouchX) > touchSlop ||
                             Math.abs(y - mInitialTouchY) > touchSlop) {
+                        mHandler.removeCallbacks(mLongPressBrightnessChange);
+                    }
+                } else {
                     mHandler.removeCallbacks(mLongPressBrightnessChange);
                 }
-              } else {
-                  mHandler.removeCallbacks(mLongPressBrightnessChange);
-              }
             } else if (action == MotionEvent.ACTION_UP
                     || action == MotionEvent.ACTION_CANCEL) {
-                mVelocityTracker.recycle();
-                mVelocityTracker = null;
                 mHandler.removeCallbacks(mLongPressBrightnessChange);
                 mLinger = 0;
+            }
         }
     }
 
@@ -3761,11 +3762,11 @@ public class PhoneStatusBar extends BaseStatusBar {
 
         public void update() {
             ContentResolver resolver = mContext.getContentResolver();
-            int brightnessValue = Settings.System.getIntForUser(resolver,
-                    Settings.System.SCREEN_BRIGHTNESS_MODE, 0, UserHandle.USER_CURRENT);
-            mBrightnessControl = brightnessValue != Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC
-                    && Settings.System.getIntForUser(resolver, Settings.System.STATUS_BAR_BRIGHTNESS_CONTROL,
-                            0, UserHandle.USER_CURRENT) == 1;
+            boolean autoBrightness = Settings.System.getInt(
+                    resolver, Settings.System.SCREEN_BRIGHTNESS_MODE, 0) ==
+                    Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC;
+            mBrightnessControl = !autoBrightness && Settings.System.getInt(
+                    resolver, Settings.System.STATUS_BAR_BRIGHTNESS_CONTROL, 0) == 1;
             String notificationShortcutsIsActive = Settings.System.getStringForUser(resolver,
                     Settings.System.NOTIFICATION_SHORTCUTS_CONFIG, UserHandle.USER_CURRENT);
             mNotificationShortcutsHideCarrier = Settings.System.getIntForUser(resolver,
