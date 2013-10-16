@@ -21,6 +21,8 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.os.UserHandle;
+import android.provider.Settings;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -133,6 +135,27 @@ public class KeyguardSimPukView extends KeyguardAbsKeyInputView
             });
         }
 
+        final int randomDigitMode = Settings.Secure.getIntForUser(
+            mContext.getContentResolver(), Settings.Secure.SIMPIN_RANDOM,
+            0, UserHandle.USER_CURRENT);
+
+        if (randomDigitMode > 0) {
+            final View randomButton = findViewById(R.id.key_random);
+            if (randomDigitMode == 1) {
+                buildRandomNumPadKey();
+            }
+            if (randomButton != null) {
+                randomButton.setVisibility(View.VISIBLE);
+                randomButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        doHapticKeyClick();
+                        buildRandomNumPadKey();
+                    }
+                });
+            }
+        }
+
         // The delete button is of the PIN keyboard itself in some (e.g. tablet) layouts,
         // not a separate view
         View pinDelete = findViewById(R.id.delete_button);
@@ -163,6 +186,20 @@ public class KeyguardSimPukView extends KeyguardAbsKeyInputView
         mPasswordEntry.requestFocus();
 
         mSecurityMessageDisplay.setTimeout(0); // don't show ownerinfo/charging status by default
+    }
+
+    private void buildRandomNumPadKey() {
+        NumPadKey button;
+        for (int i = 0; i < 10; i++) {
+            button = (NumPadKey) findViewById(
+                mContext.getResources().getIdentifier("android:id/key" + i, null, null));
+            if (button != null) {
+                if (i == 0) {
+                    button.initNumKeyPad();
+                }
+                button.createNumKeyPad(true);
+            }
+        }
     }
 
     @Override
